@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Add Fixed Expense - Personal Finance{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-plus"></i> Add Fixed Expense</h2>
+        <p class="text-muted">Add a new recurring expense to track your monthly commitments</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-receipt"></i> Fixed Expense Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Expense Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required
+                                   placeholder="e.g., Netflix Subscription, Rent, Internet">
+                            <div class="form-text">Enter a descriptive name for this expense</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">Select a category</option>
+                                <option value="Housing">Housing</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Subscriptions">Subscriptions</option>
+                                <option value="Insurance">Insurance</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Education">Education</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Food">Food</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Optional: Add any additional details about this expense"></textarea>
+                    </div>
+                    
+                    <!-- Financial Details -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">Amount (€) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" min="0" class="form-control" id="amount" name="amount" required
+                                       placeholder="0.00">
+                            </div>
+                            <div class="form-text">Enter the exact amount for each payment</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="frequency" class="form-label">Frequency <span class="text-danger">*</span></label>
+                            <select class="form-select" id="frequency" name="frequency" required>
+                                <option value="">Select frequency</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly (Every 3 months)</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                            <div class="form-text">How often this expense occurs</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Date Range -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            <div class="form-text">When this expense started or will start</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="end_date" class="form-label">End Date (Optional)</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                            <div class="form-text">Leave empty for ongoing expenses</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Monthly Impact Preview -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-calculator"></i> Monthly Impact Preview</h6>
+                                    <div id="monthly-impact" class="h5 text-primary">
+                                        €0.00 per month
+                                    </div>
+                                    <small class="text-muted">This is how much this expense affects your monthly budget</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('fixed_expenses') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Fixed Expense
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-question-circle"></i> Need Help?
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-lightbulb"></i> Examples</h6>
+                        <ul class="list-unstyled small">
+                            <li>• <strong>Monthly:</strong> Rent, Netflix, Spotify</li>
+                            <li>• <strong>Quarterly:</strong> Property tax, quarterly insurance</li>
+                            <li>• <strong>Yearly:</strong> Car registration, annual insurance</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-calendar"></i> Date Tips</h6>
+                        <ul class="list-unstyled small">
+                            <li>• Use today's date if starting now</li>
+                            <li>• Use contract start date for subscriptions</li>
+                            <li>• End date is optional for most expenses</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-tags"></i> Categories</h6>
+                        <ul class="list-unstyled small">
+                            <li>• Helps organize and analyze spending</li>
+                            <li>• Use consistent naming for better insights</li>
+                            <li>• Create custom categories as needed</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.getElementById('amount');
+    const frequencySelect = document.getElementById('frequency');
+    const monthlyImpactDiv = document.getElementById('monthly-impact');
+    
+    function updateMonthlyImpact() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const frequency = frequencySelect.value;
+        
+        let monthlyAmount = 0;
+        
+        switch(frequency) {
+            case 'monthly':
+                monthlyAmount = amount;
+                break;
+            case 'quarterly':
+                monthlyAmount = amount / 3;
+                break;
+            case 'yearly':
+                monthlyAmount = amount / 12;
+                break;
+            default:
+                monthlyAmount = 0;
+        }
+        
+        monthlyImpactDiv.textContent = `€${monthlyAmount.toFixed(2)} per month`;
+        
+        if (monthlyAmount > 0) {
+            monthlyImpactDiv.className = 'h5 text-success';
+        } else {
+            monthlyImpactDiv.className = 'h5 text-muted';
+        }
+    }
+    
+    amountInput.addEventListener('input', updateMonthlyImpact);
+    frequencySelect.addEventListener('change', updateMonthlyImpact);
+    
+    // Set default start date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('start_date').value = today;
+});
+</script>
+{% endblock %} 

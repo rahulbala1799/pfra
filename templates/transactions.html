@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - Personal Finance App{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-list"></i> All Transactions</h2>
+                <p class="text-muted">Complete history of your financial transactions</p>
+            </div>
+            <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Transaction
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>{{ transaction.date }}</td>
+                                <td>
+                                    {% if transaction.type == 'income' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-arrow-up"></i> Income
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-arrow-down"></i> Expense
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-capitalize">{{ transaction.category.replace('-', ' ') }}</span>
+                                </td>
+                                <td>{{ transaction.description }}</td>
+                                <td class="text-end">
+                                    <strong class="{% if transaction.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if transaction.type == 'income' %}+{% else %}-{% endif %}€{{ "%.2f"|format(transaction.amount) }}
+                                    </strong>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Summary Statistics -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h5>Total Income</h5>
+                                <h3>€{{ "%.2f"|format(transactions|selectattr("type", "equalto", "income")|sum(attribute="amount")) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h5>Total Expenses</h5>
+                                <h3>€{{ "%.2f"|format(transactions|selectattr("type", "equalto", "expense")|sum(attribute="amount")) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h5>Net Worth</h5>
+                                <h3>€{{ "%.2f"|format(transactions|selectattr("type", "equalto", "income")|sum(attribute="amount") - transactions|selectattr("type", "equalto", "expense")|sum(attribute="amount")) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No transactions found</h4>
+                    <p class="text-muted">Start tracking your finances by adding your first transaction.</p>
+                    <a href="{{ url_for('add_transaction') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus"></i> Add First Transaction
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

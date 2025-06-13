@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Investments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-chart-line text-success"></i> Investments</h1>
+                <div>
+                    <select class="form-select" onchange="changeMonth()" id="monthSelect">
+                        {% for i in range(1, 13) %}
+                        <option value="{{ i }}" {% if i == selected_month %}selected{% endif %}>
+                            {{ ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                                'July', 'August', 'September', 'October', 'November', 'December'][i] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>📈 Index Funds</h5>
+                    <h3>€{{ "%.2f"|format(investment_totals['Index']) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>🥇 Metals</h5>
+                    <h3>€{{ "%.2f"|format(investment_totals['Metals']) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>₿ Crypto</h5>
+                    <h3>€{{ "%.2f"|format(investment_totals['Crypto']) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>💰 Total</h5>
+                    <h3>€{{ "%.2f"|format(total_investments) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add Investment Forms -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">📈 Add Index Investment</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_investment') }}">
+                        <input type="hidden" name="month" value="{{ selected_month }}">
+                        <input type="hidden" name="year" value="{{ selected_year }}">
+                        <input type="hidden" name="investment_type" value="Index">
+                        <div class="mb-3">
+                            <label class="form-label">Amount (€)</label>
+                            <input type="number" class="form-control" name="amount" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional)</label>
+                            <input type="text" class="form-control" name="notes" placeholder="e.g., VWCE, S&P 500">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Investment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">🥇 Add Metals Investment</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_investment') }}">
+                        <input type="hidden" name="month" value="{{ selected_month }}">
+                        <input type="hidden" name="year" value="{{ selected_year }}">
+                        <input type="hidden" name="investment_type" value="Metals">
+                        <div class="mb-3">
+                            <label class="form-label">Amount (€)</label>
+                            <input type="number" class="form-control" name="amount" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional)</label>
+                            <input type="text" class="form-control" name="notes" placeholder="e.g., Gold, Silver">
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">Add Investment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">₿ Add Crypto Investment</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_investment') }}">
+                        <input type="hidden" name="month" value="{{ selected_month }}">
+                        <input type="hidden" name="year" value="{{ selected_year }}">
+                        <input type="hidden" name="investment_type" value="Crypto">
+                        <div class="mb-3">
+                            <label class="form-label">Amount (€)</label>
+                            <input type="number" class="form-control" name="amount" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional)</label>
+                            <input type="text" class="form-control" name="notes" placeholder="e.g., Bitcoin, Ethereum">
+                        </div>
+                        <button type="submit" class="btn btn-info w-100">Add Investment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment History -->
+    {% if monthly_investments %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Investment History - {{ ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'][selected_month] }} {{ selected_year }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Notes</th>
+                                    <th>Date Added</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for investment in monthly_investments %}
+                                <tr>
+                                    <td>
+                                        {% if investment.investment_type == 'Index' %}
+                                            <span class="badge bg-primary">📈 {{ investment.investment_type }}</span>
+                                        {% elif investment.investment_type == 'Metals' %}
+                                            <span class="badge bg-warning">🥇 {{ investment.investment_type }}</span>
+                                        {% elif investment.investment_type == 'Crypto' %}
+                                            <span class="badge bg-info">₿ {{ investment.investment_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>€{{ "%.2f"|format(investment.amount) }}</strong></td>
+                                    <td>{{ investment.notes or '-' }}</td>
+                                    <td>{{ investment.created_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('delete_investment', investment_id=investment.id) }}" 
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to delete this investment?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i> No investments recorded for this month yet.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function changeMonth() {
+    const month = document.getElementById('monthSelect').value;
+    window.location.href = `{{ url_for('investments') }}?month=${month}&year={{ selected_year }}`;
+}
+</script>
+{% endblock %} 

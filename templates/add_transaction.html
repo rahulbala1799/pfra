@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Add Transaction - Personal Finance App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-plus"></i> Add New Transaction
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Select type...</option>
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select category...</option>
+                                <!-- Income categories -->
+                                <optgroup label="Income" id="income-categories" style="display:none;">
+                                    <option value="salary">Salary</option>
+                                    <option value="freelance">Freelance</option>
+                                    <option value="investment">Investment</option>
+                                    <option value="business">Business</option>
+                                    <option value="other-income">Other Income</option>
+                                </optgroup>
+                                <!-- Expense categories -->
+                                <optgroup label="Expenses" id="expense-categories" style="display:none;">
+                                    <option value="food">Food & Dining</option>
+                                    <option value="transportation">Transportation</option>
+                                    <option value="housing">Housing</option>
+                                    <option value="utilities">Utilities</option>
+                                    <option value="entertainment">Entertainment</option>
+                                    <option value="shopping">Shopping</option>
+                                    <option value="healthcare">Healthcare</option>
+                                    <option value="education">Education</option>
+                                    <option value="travel">Travel</option>
+                                    <option value="insurance">Insurance</option>
+                                    <option value="other-expense">Other Expense</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">Amount (€)</label>
+                            <input type="number" class="form-control" id="amount" name="amount" 
+                                   step="0.01" min="0" required placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" 
+                                  rows="3" placeholder="Enter transaction description..."></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Transaction
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('type').addEventListener('change', function() {
+    const type = this.value;
+    const incomeCategories = document.getElementById('income-categories');
+    const expenseCategories = document.getElementById('expense-categories');
+    const categorySelect = document.getElementById('category');
+    
+    // Reset category selection
+    categorySelect.value = '';
+    
+    if (type === 'income') {
+        incomeCategories.style.display = 'block';
+        expenseCategories.style.display = 'none';
+    } else if (type === 'expense') {
+        incomeCategories.style.display = 'none';
+        expenseCategories.style.display = 'block';
+    } else {
+        incomeCategories.style.display = 'none';
+        expenseCategories.style.display = 'none';
+    }
+});
+</script>
+{% endblock %} 

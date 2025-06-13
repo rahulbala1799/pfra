@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debt Management - Personal Finance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            --warning-gradient: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+            --success-gradient: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --platinum-gradient: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+            --click-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            --loan-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .hero-section {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .debt-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .debt-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            border: none;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .debt-progress {
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            transition: width 0.8s ease-in-out;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Debt Acceleration Setup Form */
+        .acceleration-setup {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+        }
+
+        .setup-step {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .setup-step.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .step-number {
+            background: var(--primary-gradient);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        .min-payment-input {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .debt-info {
+            flex: 1;
+        }
+
+        .debt-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .current-balance {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .payment-input {
+            width: 120px;
+        }
+
+        .income-savings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .income-savings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        /* Results Section */
+        .acceleration-results {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+            display: none;
+        }
+
+        .scenario-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .scenario-card {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .scenario-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .scenario-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .scenario-header {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 0.75rem;
+        }
+
+        .scenario-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 0.25rem;
+        }
+
+        .scenario-description {
+            font-size: 0.85rem;
+            color: #6c757d;
+            line-height: 1.3;
+        }
+
+        .scenario-timeframe {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .scenario-extra-payment {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+
+        .scenario-savings {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Monthly Plan Timeline */
+        .monthly-timeline {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .timeline-month {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .month-title {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .month-total {
+            font-weight: 700;
+            color: #28a745;
+        }
+
+        .debt-payments {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .debt-payment-item {
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .debt-payment-name {
+            font-weight: 500;
+        }
+
+        .debt-payment-amount {
+            font-weight: 600;
+            color: #dc3545;
+        }
+
+        .paid-off-badge {
+            background: #28a745;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .expense-category {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .breakdown-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+
+        .breakdown-label {
+            font-size: 0.95rem;
+        }
+
+        .breakdown-amount {
+            font-size: 1rem;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .available-amount-card {
+            border: 2px solid #007bff;
+        }
+
+        .financial-summary {
+            border: 1px solid #dee2e6;
+        }
+
+        /* Disposable Income Section */
+        .disposable-income-section {
+            margin: 2rem 0;
+        }
+
+        .disposable-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+
+        .disposable-amount.text-success {
+            color: #28a745 !important;
+        }
+
+        .disposable-amount.text-warning {
+            color: #ffc107 !important;
+        }
+
+        .disposable-amount.text-danger {
+            color: #dc3545 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <div class="container hero-content">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="fas fa-chart-line me-3"></i>Debt Freedom Planner
+                    </h1>
+                    <p class="lead mb-0">Create a realistic debt acceleration plan based on your actual income and expenses</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="metric-card text-center">
+                        <div class="metric-value text-danger">€{{ "%.0f"|format(total_debt) }}</div>
+                        <div class="metric-label">Total Debt</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Current Debt Overview -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value text-primary">{{ debt_accounts|length }}</div>
+                        <div class="metric-label">Active Debts</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value text-info">€{{ "%.0f"|format(total_monthly_payments) }}</div>
+                        <div class="metric-label">Current Monthly Payments</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value text-warning">{{ "%.1f"|format(debt_to_income_ratio) }}%</div>
+                        <div class="metric-label">Debt-to-Income Ratio</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Debt Accounts -->
+        <div class="row mb-4">
+            {% for account in debt_accounts %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="debt-card" style="background: {% if account.account_type == 'Credit Card' %}{% if 'Platinum' in account.name %}var(--platinum-gradient){% elif 'Click' in account.name %}var(--click-gradient){% else %}var(--info-gradient){% endif %}{% else %}var(--loan-gradient){% endif %};">
+                    <div class="card-header">
+                        <h5 class="card-title mb-1">
+                            <i class="fas {% if account.account_type == 'Credit Card' %}fa-credit-card{% else %}fa-hand-holding-usd{% endif %} me-2"></i>
+                            {{ account.name }}
+                        </h5>
+                        <small class="text-muted">{{ account.account_type }}</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Current Balance</span>
+                            <span class="h5 mb-0 text-danger">€{{ "%.2f"|format(debt_balances[account.id].current_balance) }}</span>
+                        </div>
+                        
+                        {% if debt_balances[account.id].opening_balance > 0 %}
+                        <div class="debt-progress">
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: {{ ((debt_balances[account.id].opening_balance - debt_balances[account.id].current_balance) / debt_balances[account.id].opening_balance * 100)|round(1) }}%"></div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">Paid: €{{ "%.0f"|format(debt_balances[account.id].opening_balance - debt_balances[account.id].current_balance) }}</small>
+                            <small class="text-muted">{{ ((debt_balances[account.id].opening_balance - debt_balances[account.id].current_balance) / debt_balances[account.id].opening_balance * 100)|round(1) }}% Complete</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Debt Acceleration Setup Form -->
+        <div class="acceleration-setup">
+            <h2 class="mb-4">
+                <i class="fas fa-rocket me-2 text-primary"></i>
+                Set Up Your Debt Acceleration Plan
+            </h2>
+            
+            <!-- Step 1: Set Minimum Payments -->
+            <div class="setup-step active">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div>
+                        <h4 class="mb-1">Set Your Minimum Monthly Payments</h4>
+                        <p class="text-muted mb-0">Set the minimum payment for each debt account</p>
+                    </div>
+                </div>
+                
+                <div id="minimumPayments">
+                    {% for account in debt_accounts %}
+                    <div class="min-payment-input">
+                        <div class="debt-info">
+                            <div class="debt-name">{{ account.name }}</div>
+                            <div class="current-balance">Current Balance: €{{ "%.2f"|format(debt_balances[account.id].current_balance) }}</div>
+                        </div>
+                        <div class="input-group" style="width: 150px;">
+                            <span class="input-group-text">€</span>
+                            <input type="number" 
+                                   class="form-control payment-input" 
+                                   id="minPayment{{ account.id }}" 
+                                   value="{% if 'Wedding' in account.name %}477{% elif 'Xerox' in account.name %}98{% elif 'Pita' in account.name %}40{% elif 'Platinum' in account.name %}{{ "%.2f"|format(debt_balances[account.id].current_balance) }}{% elif 'Click' in account.name %}{{ "%.2f"|format(debt_balances[account.id].current_balance * 0.1) }}{% elif 'Revolut' in account.name %}100{% else %}0{% endif %}"
+                                   min="0" 
+                                   step="0.01"
+                                   data-account-id="{{ account.id }}"
+                                   data-account-name="{{ account.name }}"
+                                   data-current-balance="{{ debt_balances[account.id].current_balance }}">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Step 2: Monthly Income & Savings -->
+            <div class="setup-step">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div>
+                        <h4 class="mb-1">Set Your Financial Parameters</h4>
+                        <p class="text-muted mb-0">Enter your expected monthly income and savings goals during the debt payoff period</p>
+                    </div>
+                </div>
+                
+                <!-- Monthly Income -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="monthlyIncome" class="form-label fw-bold">
+                            <i class="fas fa-money-bill-wave text-success me-2"></i>Expected Monthly Income
+                        </label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">€</span>
+                            <input type="number" class="form-control" id="monthlyIncome" value="8000" min="0" step="100">
+                        </div>
+                        <small class="text-muted">Your total monthly income during the debt payoff period</small>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="monthlySavings" class="form-label fw-bold">
+                            <i class="fas fa-piggy-bank text-info me-2"></i>Monthly Savings/Investment Goal
+                        </label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">€</span>
+                            <input type="number" class="form-control" id="monthlySavings" value="1500" min="0" step="50">
+                        </div>
+                        <small class="text-muted">Amount you want to save/invest each month</small>
+                    </div>
+                </div>
+
+                <!-- Fixed Expenses Breakdown -->
+                <div class="fixed-expenses-section mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-home text-warning me-2"></i>Fixed Monthly Expenses
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="expense-category mb-3">
+                                <h6 class="text-muted mb-2">Housing & Utilities</h6>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label small">Rent/Mortgage</label>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control expense-input" data-category="housing" value="975">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Utilities</label>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control expense-input" data-category="utilities" value="150">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="expense-category mb-3">
+                                <h6 class="text-muted mb-2">Living Expenses</h6>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label small">Groceries</label>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control expense-input" data-category="groceries" value="400">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Transportation</label>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control expense-input" data-category="transport" value="200">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="expense-category mb-3">
+                                <h6 class="text-muted mb-2">Personal & Lifestyle</h6>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label small">Entertainment</label>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control expense-input" data-category="entertainment" value="200">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Personal Care</label>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control expense-input" data-category="personal" value="100">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label small">Insurance</label>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control expense-input" data-category="insurance" value="150">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Emergency Buffer</label>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control expense-input" data-category="emergency" value="200">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Summary -->
+                <div class="financial-summary p-4 rounded-4 bg-light mb-4">
+                    <h5 class="mb-3 text-primary">
+                        <i class="fas fa-calculator me-2"></i>Your Monthly Financial Breakdown
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="breakdown-grid">
+                                <div class="breakdown-row income-row">
+                                    <div class="breakdown-label">
+                                        <i class="fas fa-plus text-success me-2"></i>Monthly Income
+                                    </div>
+                                    <div class="breakdown-amount text-success fw-bold" id="summaryIncome">€0</div>
+                                </div>
+                                
+                                <div class="breakdown-row expense-row">
+                                    <div class="breakdown-label">
+                                        <i class="fas fa-minus text-danger me-2"></i>Fixed Living Expenses
+                                    </div>
+                                    <div class="breakdown-amount text-danger" id="summaryExpenses">€0</div>
+                                </div>
+                                
+                                <div class="breakdown-row debt-row">
+                                    <div class="breakdown-label">
+                                        <i class="fas fa-credit-card text-warning me-2"></i>Current Min Debt Payments
+                                    </div>
+                                    <div class="breakdown-amount text-warning" id="summaryCurrentDebt">€{{ "%.0f"|format(total_monthly_payments) }}</div>
+                                </div>
+                                
+                                <div class="breakdown-row savings-row">
+                                    <div class="breakdown-label">
+                                        <i class="fas fa-piggy-bank text-info me-2"></i>Savings/Investment Goal
+                                    </div>
+                                    <div class="breakdown-amount text-info" id="summarySavings">€0</div>
+                                </div>
+                                
+                                <hr class="my-2">
+                                
+                                <div class="breakdown-row total-row">
+                                    <div class="breakdown-label fw-bold">
+                                        <i class="fas fa-rocket text-primary me-2"></i>Available for Extra Debt Payment
+                                    </div>
+                                    <div class="breakdown-amount fw-bold text-primary" id="summaryAvailable">€0</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="available-amount-card text-center p-3 rounded-3 bg-white shadow-sm">
+                                <div class="h2 text-primary mb-1" id="availableAmount">€0</div>
+                                <small class="text-muted">Extra Monthly Payment Capacity</small>
+                            </div>
+                            
+                            <div class="calculation-hint mt-3">
+                                <small class="text-muted">
+                                    <strong>Calculation:</strong><br>
+                                    Income - Living Expenses - Current Debt Payments - Savings Goal
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extra Monthly Contribution Section -->
+            <div class="mb-4">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Extra Monthly Contribution (Optional)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <label for="extraContribution" class="form-label">
+                                    How much extra would you like to contribute towards debt payment each month?
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">€</span>
+                                    <input type="number" class="form-control" id="extraContribution" 
+                                           value="0" min="0" step="50" placeholder="0">
+                                </div>
+                                <small class="text-muted">
+                                    This extra amount will be allocated using the avalanche method (highest interest rate first) for maximum efficiency.
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="badge bg-info p-3">
+                                    <i class="fas fa-snowflake me-1"></i>
+                                    Avalanche Method<br>
+                                    <small>Targets highest interest first</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculate Button -->
+            <div class="text-center mt-4">
+                <button class="btn calculate-btn btn-lg" onclick="calculateDebtScenarios()">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Calculate My Debt Freedom Scenarios
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="acceleration-results" id="accelerationResults">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-target me-2 text-success"></i>
+                    Your Debt Freedom Scenarios
+                </h2>
+                <div class="download-buttons" id="downloadButtons" style="display: none;">
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary btn-sm" onclick="downloadScenarios('pdf')">
+                            <i class="fas fa-file-pdf me-1"></i>
+                            PDF
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="downloadScenarios('excel')">
+                            <i class="fas fa-file-excel me-1"></i>
+                            Excel
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="downloadScenarios('csv')">
+                            <i class="fas fa-file-csv me-1"></i>
+                            CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="scenarioCards" class="scenario-cards">
+                <!-- Scenario cards will be populated by JavaScript -->
+            </div>
+            
+            <div class="monthly-timeline" id="monthlyTimeline">
+                <h3 class="mb-3">Monthly Payment Plan</h3>
+                <div id="timelineContainer">
+                    <!-- Monthly timeline will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Calculate available amount for debt acceleration
+        function updateAvailableAmount() {
+            const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
+            const savings = parseFloat(document.getElementById('monthlySavings').value) || 0;
+            
+            // Calculate total living expenses from individual inputs
+            let totalExpenses = 0;
+            document.querySelectorAll('.expense-input').forEach(input => {
+                totalExpenses += parseFloat(input.value) || 0;
+            });
+            
+            // Get total minimum payments
+            let totalMinPayments = 0;
+            document.querySelectorAll('.payment-input').forEach(input => {
+                totalMinPayments += parseFloat(input.value) || 0;
+            });
+            
+            // Get total minimum payments (from backend data)
+            const currentDebtPayments = {{ total_monthly_payments }};
+
+            const available = income - totalExpenses - savings - currentDebtPayments;
+            
+            // Update all summary fields
+            document.getElementById('summaryIncome').textContent = '€' + income.toFixed(0);
+            document.getElementById('summaryExpenses').textContent = '€' + totalExpenses.toFixed(0);
+            document.getElementById('summarySavings').textContent = '€' + savings.toFixed(0);
+            document.getElementById('summaryCurrentDebt').textContent = '€' + currentDebtPayments.toFixed(0);
+            document.getElementById('summaryAvailable').textContent = '€' + Math.max(0, available).toFixed(0);
+            document.getElementById('availableAmount').textContent = '€' + Math.max(0, available).toFixed(0);
+            
+            // Update color based on available amount
+            const availableElement = document.getElementById('availableAmount');
+            const summaryElement = document.getElementById('summaryAvailable');
+            
+            if (available > 500) {
+                availableElement.className = 'h2 text-success mb-1';
+                summaryElement.className = 'breakdown-amount fw-bold text-success';
+            } else if (available > 100) {
+                availableElement.className = 'h2 text-warning mb-1';
+                summaryElement.className = 'breakdown-amount fw-bold text-warning';
+            } else {
+                availableElement.className = 'h2 text-danger mb-1';
+                summaryElement.className = 'breakdown-amount fw-bold text-danger';
+            }
+        }
+
+        // Add event listeners to all input fields
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = ['monthlyIncome', 'monthlySavings'];
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', updateAvailableAmount);
+                }
+            });
+            
+            // Add listeners for all expense inputs
+            document.querySelectorAll('.expense-input').forEach(input => {
+                input.addEventListener('input', updateAvailableAmount);
+            });
+            
+            document.querySelectorAll('.payment-input').forEach(input => {
+                input.addEventListener('input', updateAvailableAmount);
+            });
+            
+            // Initial calculation
+            updateAvailableAmount();
+        });
+
+        function calculateDebtScenarios() {
+            // Collect all the user input data
+            const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value);
+            const monthlySavings = parseFloat(document.getElementById('monthlySavings').value);
+            
+            // Calculate total expenses from individual inputs
+            let monthlyExpenses = 0;
+            document.querySelectorAll('.expense-input').forEach(input => {
+                monthlyExpenses += parseFloat(input.value) || 0;
+            });
+            
+            // Validate inputs
+            if (!monthlyIncome || monthlyIncome <= 0) {
+                alert('Please enter your expected monthly income');
+                return;
+            }
+            
+            // Collect minimum payments
+            const minPayments = {};
+            let totalMinPayments = 0;
+            let hasValidPayments = false;
+            
+            document.querySelectorAll('.payment-input').forEach(input => {
+                const accountId = input.dataset.accountId;
+                const payment = parseFloat(input.value) || 0;
+                const balance = parseFloat(input.dataset.currentBalance);
+                
+                if (payment > 0) hasValidPayments = true;
+                if (payment > balance) {
+                    alert(`Minimum payment for ${input.dataset.accountName} cannot be higher than current balance (€${balance.toFixed(2)})`);
+                    return;
+                }
+                
+                minPayments[accountId] = payment;
+                totalMinPayments += payment;
+            });
+            
+            if (!hasValidPayments) {
+                alert('Please set minimum payments for at least one debt account');
+                return;
+            }
+            
+            const availableMoney = monthlyIncome - (monthlyExpenses || 0) - (monthlySavings || 0) - totalMinPayments;
+            
+            if (availableMoney < 0) {
+                alert('Your expenses exceed your income! Please adjust your inputs.');
+                return;
+            }
+            
+            // Get extra contribution amount
+            const extraContribution = parseFloat(document.getElementById('extraContribution').value) || 0;
+            
+            // Send data to backend
+            const requestData = {
+                monthly_income: monthlyIncome,
+                monthly_savings: monthlySavings || 0,
+                monthly_expenses: monthlyExpenses || 0,
+                minimum_payments: minPayments,
+                available_for_debt: availableMoney,
+                extra_contribution: extraContribution
+            };
+            
+            // Store user data for download
+            currentUserData = requestData;
+            
+            fetch('/calculate_debt_acceleration', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayScenarios(data.scenarios);
+                } else {
+                    alert('Error calculating scenarios: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error calculating debt scenarios. Please try again.');
+            });
+        }
+        
+        // Store scenarios globally for download functionality
+        let currentScenarios = [];
+        let currentUserData = {};
+        
+        function displayScenarios(scenarios) {
+            const resultsSection = document.getElementById('accelerationResults');
+            const scenarioCards = document.getElementById('scenarioCards');
+            const downloadButtons = document.getElementById('downloadButtons');
+            
+            // Store scenarios for download
+            currentScenarios = scenarios;
+            
+            scenarioCards.innerHTML = '';
+            
+            scenarios.forEach((scenario, index) => {
+                const card = document.createElement('div');
+                card.className = 'scenario-card';
+                card.onclick = () => selectScenario(scenario, card);
+                
+                // Get scenario name and description
+                const scenarioName = scenario.scenario_name || `Scenario ${index + 1}`;
+                const scenarioDescription = scenario.scenario_description || '';
+                
+                // Check if this is a budget scenario with breakdown
+                let extraPaymentHtml = '';
+                if (scenario.is_budget_scenario && scenario.user_contribution > 0) {
+                    extraPaymentHtml = `
+                        <div class="scenario-extra-payment">
+                            <div>€${scenario.consistent_monthly_payment.toFixed(0)} Total/Month</div>
+                            <small class="text-muted">
+                                Your contribution: €${scenario.user_contribution.toFixed(0)} + 
+                                Budget allocation: €${scenario.budget_allocation.toFixed(0)}
+                            </small>
+                        </div>
+                    `;
+                } else if (scenario.extra_payment > 0) {
+                    extraPaymentHtml = `<div class="scenario-extra-payment">€${scenario.consistent_monthly_payment.toFixed(0)} Total/Month</div>`;
+                } else {
+                    extraPaymentHtml = `<div class="scenario-extra-payment">Minimum Payments Only</div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="scenario-header">
+                        <div class="scenario-name">${scenarioName}</div>
+                        <div class="scenario-description">${scenarioDescription}</div>
+                    </div>
+                    <div class="scenario-timeframe">${scenario.months} Months</div>
+                    ${extraPaymentHtml}
+                    <div class="scenario-savings">
+                        <div><i class="fas fa-piggy-bank me-1"></i>Interest Saved: €${scenario.interest_saved.toFixed(0)}</div>
+                        <div><i class="fas fa-clock me-1"></i>Time Saved: ${scenario.time_saved_months} months</div>
+                    </div>
+                `;
+                
+                scenarioCards.appendChild(card);
+            });
+            
+            // Show download buttons
+            downloadButtons.style.display = 'block';
+            
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function selectScenario(scenario, cardElement) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.scenario-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked card
+            cardElement.classList.add('selected');
+            
+            // Calculate disposable income after this plan
+            const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value) || 0;
+            const monthlySavings = parseFloat(document.getElementById('monthlySavings').value) || 0;
+            
+            // Calculate total expenses from individual inputs
+            let monthlyExpenses = 0;
+            document.querySelectorAll('.expense-input').forEach(input => {
+                monthlyExpenses += parseFloat(input.value) || 0;
+            });
+            
+            // Get current debt payments
+            const currentDebtPayments = {{ total_monthly_payments }};
+            
+            // Calculate disposable income after extra payment
+            const consistentPayment = scenario.consistent_monthly_payment || (currentDebtPayments + scenario.extra_payment);
+            const disposableIncome = monthlyIncome - monthlyExpenses - monthlySavings - consistentPayment;
+            
+            // Show disposable income section
+            showDisposableIncome(disposableIncome, scenario);
+            
+            // Show monthly timeline
+            displayMonthlyTimeline(scenario.monthly_plan);
+        }
+        
+        function showDisposableIncome(disposableIncome, scenario) {
+            // Create or update disposable income section
+            let disposableSection = document.getElementById('disposableIncomeSection');
+            if (!disposableSection) {
+                disposableSection = document.createElement('div');
+                disposableSection.id = 'disposableIncomeSection';
+                disposableSection.className = 'disposable-income-section';
+                
+                // Insert after scenario cards
+                const scenarioCards = document.getElementById('scenarioCards');
+                scenarioCards.parentNode.insertBefore(disposableSection, scenarioCards.nextSibling);
+            }
+            
+            const colorClass = disposableIncome > 1000 ? 'text-success' : 
+                              disposableIncome > 500 ? 'text-warning' : 'text-danger';
+            
+            const currentMinPayments = {{ total_monthly_payments }};
+            
+            disposableSection.innerHTML = `
+                <div class="alert alert-info mt-4">
+                    <h4 class="alert-heading">
+                        <i class="fas fa-wallet me-2"></i>
+                        Selected Plan: ${scenario.months} Months
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Payment Breakdown:</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>Minimum Payments:</strong> €${currentMinPayments.toFixed(0)}/month</li>
+                                <li><strong>Extra Payment:</strong> €${scenario.extra_payment.toFixed(0)}/month</li>
+                                <li><strong>Consistent Total Payment:</strong> €${scenario.consistent_monthly_payment.toFixed(0)}/month</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Your Remaining Income:</h5>
+                            <div class="disposable-amount ${colorClass}">
+                                <i class="fas fa-coins me-2"></i>
+                                €${Math.max(0, disposableIncome).toFixed(0)} per month
+                            </div>
+                            <small class="text-muted">
+                                ${disposableIncome < 0 ? 'Warning: This plan exceeds your available income!' : 
+                                  disposableIncome < 200 ? 'This leaves you with very little buffer.' :
+                                  disposableIncome < 500 ? 'This leaves you with a modest buffer.' :
+                                  'This leaves you with a comfortable buffer.'}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            disposableSection.style.display = 'block';
+        }
+        
+        function displayMonthlyTimeline(monthlyPlan) {
+            const timeline = document.getElementById('monthlyTimeline');
+            const container = document.getElementById('timelineContainer');
+            
+            container.innerHTML = '';
+            
+            // Get current date to start from current month
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth(); // 0-based (0 = January)
+            const currentYear = currentDate.getFullYear();
+            
+            monthlyPlan.forEach((month, index) => {
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'timeline-month';
+                
+                // Calculate the actual month and year for this payment
+                const paymentDate = new Date(currentYear, currentMonth + index, 1);
+                const monthName = paymentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+                
+                let paymentsHtml = '';
+                month.payments.forEach(payment => {
+                    if (payment.is_paid_off) {
+                        paymentsHtml += `
+                            <div class="debt-payment-item">
+                                <span class="debt-payment-name">${payment.name}</span>
+                                <span class="paid-off-badge">PAID OFF!</span>
+                            </div>
+                        `;
+                    } else {
+                        paymentsHtml += `
+                            <div class="debt-payment-item">
+                                <span class="debt-payment-name">${payment.name}</span>
+                                <span class="debt-payment-amount">€${payment.amount.toFixed(2)}</span>
+                            </div>
+                        `;
+                    }
+                });
+                
+                monthDiv.innerHTML = `
+                    <div class="month-header">
+                        <div class="month-title">Month ${index + 1} - ${monthName}</div>
+                        <div class="month-total">Total Payment: €${month.total_payment.toFixed(2)}</div>
+                    </div>
+                    <div class="debt-payments">
+                        ${paymentsHtml}
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Remaining Total Debt: €${month.remaining_debt.toFixed(2)}</small>
+                    </div>
+                `;
+                
+                container.appendChild(monthDiv);
+            });
+            
+            timeline.style.display = 'block';
+        }
+        
+        function downloadScenarios(format) {
+            if (!currentScenarios || currentScenarios.length === 0) {
+                alert('No scenarios available to download. Please calculate scenarios first.');
+                return;
+            }
+            
+            // Mark selected scenario
+            const selectedCard = document.querySelector('.scenario-card.selected');
+            let selectedIndex = -1;
+            
+            if (selectedCard) {
+                const allCards = document.querySelectorAll('.scenario-card');
+                selectedIndex = Array.from(allCards).indexOf(selectedCard);
+            }
+            
+            // Update scenarios with selection info
+            const scenariosWithSelection = currentScenarios.map((scenario, index) => ({
+                ...scenario,
+                is_selected: index === selectedIndex
+            }));
+            
+            // Prepare download data
+            const downloadData = {
+                scenarios: scenariosWithSelection,
+                user_data: currentUserData,
+                format: format,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Create download request
+            fetch('/download_debt_scenarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(downloadData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Download failed');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                
+                // Set filename based on format
+                const timestamp = new Date().toISOString().split('T')[0];
+                const filename = `debt_acceleration_scenarios_${timestamp}.${format === 'excel' ? 'xlsx' : format}`;
+                a.download = filename;
+                
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            })
+            .catch(error => {
+                console.error('Download error:', error);
+                alert('Failed to download scenarios. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html> 

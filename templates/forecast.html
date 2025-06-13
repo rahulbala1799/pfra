@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Forecast - Personal Finance App{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-area"></i> Financial Forecast</h2>
+        <p class="text-muted">Predict your future spending patterns using machine learning</p>
+    </div>
+</div>
+
+{% if error %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> {{ error }}
+            <hr>
+            <p class="mb-0">Add more transactions to enable forecasting features.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if forecast_chart %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line"></i> Expense Forecast - Next 6 Months
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="forecastChart"></div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        This forecast is based on your historical spending patterns using linear regression analysis.
+                        Actual results may vary based on lifestyle changes and economic factors.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb"></i> Forecasting Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i> 
+                        <strong>Linear Regression:</strong> Basic trend analysis
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i> 
+                        <strong>Seasonal Patterns:</strong> Monthly spending cycles
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i> 
+                        <strong>Category Analysis:</strong> Spending by category trends
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-clock text-warning"></i> 
+                        <strong>Prophet Forecasting:</strong> Advanced time series (coming soon)
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar"></i> Forecast Accuracy
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Forecasting accuracy improves with more data:</p>
+                <div class="progress mb-2">
+                    <div class="progress-bar" role="progressbar" style="width: {% if transactions|length >= 30 %}100{% elif transactions|length >= 20 %}75{% elif transactions|length >= 10 %}50{% else %}25{% endif %}%">
+                        {{ transactions|length if transactions else 0 }} transactions
+                    </div>
+                </div>
+                <small class="text-muted">
+                    {% if (transactions|length if transactions else 0) >= 30 %}
+                        <i class="fas fa-check text-success"></i> Excellent data for accurate forecasting
+                    {% elif (transactions|length if transactions else 0) >= 20 %}
+                        <i class="fas fa-thumbs-up text-info"></i> Good data for reliable forecasting
+                    {% elif (transactions|length if transactions else 0) >= 10 %}
+                        <i class="fas fa-exclamation text-warning"></i> Minimum data for basic forecasting
+                    {% else %}
+                        <i class="fas fa-times text-danger"></i> Need more data for forecasting
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs"></i> Forecasting Tools
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="generateForecast('linear')">
+                            <i class="fas fa-chart-line"></i> Linear Trend
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-success w-100" onclick="generateForecast('seasonal')">
+                            <i class="fas fa-calendar"></i> Seasonal
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-info w-100" onclick="generateForecast('category')">
+                            <i class="fas fa-tags"></i> By Category
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Add Data
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+{% if forecast_chart %}
+var forecastData = {{ forecast_chart | safe }};
+Plotly.newPlot('forecastChart', forecastData.data, forecastData.layout, {responsive: true});
+{% endif %}
+
+function generateForecast(type) {
+    // Placeholder for different forecasting methods
+    alert('Advanced forecasting method "' + type + '" will be implemented in the next version!');
+}
+</script>
+{% endblock %} 

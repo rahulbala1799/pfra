@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Add Bank Account - Personal Finance Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-university"></i> Add New Bank Account
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Account Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required 
+                                   placeholder="e.g., Main Savings, Emergency Fund">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="account_type" class="form-label">Account Type *</label>
+                            <select class="form-select" id="account_type" name="account_type" required>
+                                <option value="">Select account type...</option>
+                                <option value="savings">💰 Savings Account</option>
+                                <option value="checking">✓ Checking Account</option>
+                                <option value="credit">💳 Credit Card</option>
+                                <option value="investment">📈 Investment Account</option>
+                                <option value="loan">🏠 Loan Account</option>
+                                <option value="other">📋 Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="bank_name" class="form-label">Bank/Institution Name *</label>
+                            <input type="text" class="form-control" id="bank_name" name="bank_name" required 
+                                   placeholder="e.g., Bank of America, Chase">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="account_number" class="form-label">Account Number (Last 4 digits)</label>
+                            <input type="text" class="form-control" id="account_number" name="account_number" 
+                                   placeholder="****1234" maxlength="10">
+                            <div class="form-text">Optional: For your reference only</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Note:</strong> This information is stored locally on your device and is not shared with any third parties.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('accounts') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Help Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-question-circle"></i> Account Type Guide
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-piggy-bank text-success"></i> Savings Account</h6>
+                        <p class="text-muted small">Long-term savings, emergency funds, high-yield savings</p>
+                        
+                        <h6><i class="fas fa-check text-primary"></i> Checking Account</h6>
+                        <p class="text-muted small">Daily transactions, bill payments, debit card usage</p>
+                        
+                        <h6><i class="fas fa-credit-card text-warning"></i> Credit Card</h6>
+                        <p class="text-muted small">Credit accounts, store cards, business credit cards</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chart-line text-info"></i> Investment Account</h6>
+                        <p class="text-muted small">401k, IRA, brokerage accounts, retirement funds</p>
+                        
+                        <h6><i class="fas fa-home text-danger"></i> Loan Account</h6>
+                        <p class="text-muted small">Mortgages, auto loans, personal loans</p>
+                        
+                        <h6><i class="fas fa-list text-secondary"></i> Other</h6>
+                        <p class="text-muted small">Any other financial account not listed above</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

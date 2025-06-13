@@ -1,0 +1,642 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Data - Personal Finance{% endblock %}
+
+{% block extra_js %}
+<script>
+// Real-time calculation for debt accounts
+function calculateMonthlySpend(form) {
+    const accountId = form.querySelector('input[name="account_id"]').value;
+    const openingBalance = parseFloat(form.querySelector('input[name="opening_balance"]').value) || 0;
+    const paidAmount = parseFloat(form.querySelector('input[name="paid_amount"]').value) || 0;
+    const closingBalance = parseFloat(form.querySelector('input[name="closing_balance"]').value) || 0;
+    
+    // Monthly Spend = Closing Balance - Opening Balance + Paid Amount
+    const monthlySpend = closingBalance - openingBalance + paidAmount;
+    
+    const monthlySpendElement = document.getElementById(`monthly-spend-${accountId}`);
+    if (monthlySpendElement) {
+        monthlySpendElement.textContent = `€${monthlySpend.toFixed(2)}`;
+        
+        // Change color based on spend amount
+        if (monthlySpend > 0) {
+            monthlySpendElement.className = 'h5 text-danger';
+        } else if (monthlySpend < 0) {
+            monthlySpendElement.className = 'h5 text-success';
+        } else {
+            monthlySpendElement.className = 'h5 text-muted';
+        }
+    }
+}
+
+// Real-time calculation for regular accounts
+function calculateTotalExpenses(form) {
+    const accountId = form.querySelector('input[name="account_id"]').value;
+    const openingBalance = parseFloat(form.querySelector('input[name="opening_balance"]').value) || 0;
+    const income = parseFloat(form.querySelector('input[name="income"]').value) || 0;
+    const closingBalance = parseFloat(form.querySelector('input[name="closing_balance"]').value) || 0;
+    
+    // Total Expenses = Opening Balance + Income - Closing Balance
+    const totalExpenses = openingBalance + income - closingBalance;
+    
+    const totalExpensesElement = document.getElementById(`total-expenses-${accountId}`);
+    if (totalExpensesElement) {
+        totalExpensesElement.textContent = `€${totalExpenses.toFixed(2)}`;
+        
+        // Change color based on expense amount
+        if (totalExpenses > 0) {
+            totalExpensesElement.className = 'h5 text-danger';
+        } else if (totalExpenses < 0) {
+            totalExpensesElement.className = 'h5 text-warning';
+        } else {
+            totalExpensesElement.className = 'h5 text-muted';
+        }
+    }
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Add calculation listeners to debt account forms
+    const debtForms = document.querySelectorAll('form[action*="set_debt_account_data"]');
+    
+    debtForms.forEach(function(form) {
+        const inputs = form.querySelectorAll('input[type="number"]');
+        
+        inputs.forEach(function(input) {
+            input.addEventListener('input', function() {
+                calculateMonthlySpend(form);
+            });
+        });
+        
+        // Calculate initial value for this form
+        calculateMonthlySpend(form);
+    });
+    
+    // Add calculation listeners to regular account forms
+    const regularForms = document.querySelectorAll('form[action*="set_regular_account_data"]');
+    
+    regularForms.forEach(function(form) {
+        const inputs = form.querySelectorAll('input[type="number"]');
+        
+        inputs.forEach(function(input) {
+            input.addEventListener('input', function() {
+                calculateTotalExpenses(form);
+            });
+        });
+        
+        // Calculate initial value for this form
+        calculateTotalExpenses(form);
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-calendar-alt"></i> Monthly Financial Data</h2>
+        </div>
+        <p class="text-muted">
+            Managing data for: <strong>{{ selected_month }}/{{ selected_year }}</strong>
+            <span class="ms-3">All amounts in EUR (€)</span>
+        </p>
+    </div>
+</div>
+
+<!-- Month Navigation -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('monthly_data') }}?month={{ (selected_month - 1) if selected_month > 1 else 12 }}&year={{ selected_year if selected_month > 1 else (selected_year - 1) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Previous Month
+                        </a>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <h4 class="mb-0">
+                            {{ ['', 'January', 'February', 'March', 'April', 'May', 'June', 
+                                'July', 'August', 'September', 'October', 'November', 'December'][selected_month] }} 
+                            {{ selected_year }}
+                        </h4>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <a href="{{ url_for('monthly_data') }}?month={{ (selected_month + 1) if selected_month < 12 else 1 }}&year={{ selected_year if selected_month < 12 else (selected_year + 1) }}" 
+                           class="btn btn-outline-primary">
+                            Next Month <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if accounts %}
+
+<!-- Account Summaries -->
+<div class="row mb-4">
+    {% for account in accounts %}
+    {% set balance = monthly_balances.get(account.id) %}
+    {% set account_transactions = monthly_transactions|selectattr("account_id", "equalto", account.id)|list %}
+    {% set total_income = account_transactions|selectattr("transaction_type", "in", ["income", "misc_income"])|selectattr("source_account_id", "none")|sum(attribute="amount") %}
+    {% set total_expenses = account_transactions|selectattr("transaction_type", "in", ["expense", "misc_expense"])|selectattr("fixed_expense_id", "none")|selectattr("source_account_id", "none")|sum(attribute="amount") %}
+    {% set opening_balance = balance.opening_balance if balance else 0 %}
+    {% set closing_balance = balance.closing_balance if balance and balance.closing_balance else 0 %}
+    {% set is_debt_account = account.account_type.lower() in ['credit', 'loan'] %}
+    
+    <div class="col-md-6 mb-3">
+        {% if is_debt_account %}
+        <!-- Debt Account Card (Credit Card / Loan) -->
+        <div class="card border-warning">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-credit-card"></i> {{ account.name }}
+                    <span class="badge bg-warning text-dark ms-2">{{ account.account_type|title }}</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('set_debt_account_data') }}" method="POST">
+                    <input type="hidden" name="account_id" value="{{ account.id }}">
+                    <input type="hidden" name="month" value="{{ selected_month }}">
+                    <input type="hidden" name="year" value="{{ selected_year }}">
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted">Opening Balance (Owed)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" min="0" class="form-control" 
+                                       name="opening_balance" value="{{ opening_balance }}" 
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted">Paid Amount</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" min="0" class="form-control" 
+                                       name="paid_amount" value="{{ total_income }}" 
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted">Closing Balance (Still Owe)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" min="0" class="form-control" 
+                                       name="closing_balance" value="{{ closing_balance }}" 
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted">Monthly Spend</label>
+                            <div class="h5 text-danger" id="monthly-spend-{{ account.id }}">
+                                €{{ "%.2f"|format(total_expenses) }}
+                            </div>
+                            <small class="text-muted">Auto-calculated</small>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning btn-sm w-100">
+                        <i class="fas fa-calculator"></i> Calculate & Save
+                    </button>
+                </form>
+                
+                <!-- Debt Account Summary -->
+                {% if balance %}
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-12">
+                        <small class="text-muted d-block">Summary for {{ account.account_type|title }}</small>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-danger">Owed</small>
+                                <div class="fw-bold">€{{ "%.2f"|format(closing_balance) }}</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-success">Paid</small>
+                                <div class="fw-bold">€{{ "%.2f"|format(total_income) }}</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-primary">Spent</small>
+                                <div class="fw-bold">€{{ "%.2f"|format(total_expenses) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Track Debt Payment -->
+                <div class="mt-3 pt-3 border-top">
+                    <small class="text-muted d-block mb-2">
+                        <i class="fas fa-tracking"></i> Track Payment Source (for analysis only)
+                    </small>
+                    <form action="{{ url_for('track_debt_payment') }}" method="POST" class="d-flex gap-2 align-items-end">
+                        <input type="hidden" name="debt_account_id" value="{{ account.id }}">
+                        <input type="hidden" name="month" value="{{ selected_month }}">
+                        <input type="hidden" name="year" value="{{ selected_year }}">
+                        
+                        <div class="flex-fill">
+                            <label class="form-label" style="font-size: 0.8rem;">Payment From</label>
+                            <select name="source_account_id" class="form-select form-select-sm" required>
+                                <option value="">Choose account...</option>
+                                {% for acc in accounts %}
+                                    {% if acc.account_type.lower() not in ['credit', 'loan'] %}
+                                    <option value="{{ acc.id }}">{{ acc.name }} ({{ acc.account_type|title }})</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div style="width: 100px;">
+                            <label class="form-label" style="font-size: 0.8rem;">Amount</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" min="0.01" name="amount" 
+                                       class="form-control" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-plus"></i> Track
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Show Tracked Debt Payments -->
+                {% set debt_payments = monthly_transactions|selectattr("account_id", "equalto", account.id)|selectattr("source_account_id", "ne", none)|list %}
+                {% if debt_payments %}
+                <div class="mt-2">
+                    <small class="text-muted d-block mb-1">Tracked Payments This Month:</small>
+                    {% for payment in debt_payments %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-info">
+                            <i class="fas fa-arrow-right"></i> 
+                            €{{ "%.2f"|format(payment.amount) }} from {{ payment.source_account.name }}
+                        </small>
+                        <small class="text-muted">{{ payment.created_date.strftime('%m/%d') }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- Regular Account Card (Savings, Checking, Investment) -->
+        <div class="card border-primary">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-university"></i> {{ account.name }}
+                    <span class="badge bg-primary ms-2">{{ account.account_type|title }}</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('set_regular_account_data') }}" method="POST">
+                    <input type="hidden" name="account_id" value="{{ account.id }}">
+                    <input type="hidden" name="month" value="{{ selected_month }}">
+                    <input type="hidden" name="year" value="{{ selected_year }}">
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted">Opening Balance</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" class="form-control" 
+                                       name="opening_balance" value="{{ opening_balance }}" 
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted">Income This Month</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" min="0" class="form-control" 
+                                       name="income" value="{{ total_income }}" 
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted">Closing Balance</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" class="form-control" 
+                                       name="closing_balance" value="{{ closing_balance }}" 
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted">Total Expenses</label>
+                            <div class="h5 text-danger" id="total-expenses-{{ account.id }}">
+                                €{{ "%.2f"|format(total_expenses) }}
+                            </div>
+                            <small class="text-muted">Auto-calculated</small>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-calculator"></i> Calculate & Save
+                    </button>
+                </form>
+                
+                <!-- Regular Account Summary -->
+                {% if balance %}
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-12">
+                        <small class="text-muted d-block">Summary for {{ account.account_type|title }}</small>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-primary">Balance</small>
+                                <div class="fw-bold">€{{ "%.2f"|format(closing_balance) }}</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-success">Income</small>
+                                <div class="fw-bold">€{{ "%.2f"|format(total_income) }}</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-danger">Expenses</small>
+                                <div class="fw-bold">€{{ "%.2f"|format(total_expenses) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Show Fixed Expenses Paid from this Account -->
+                {% set account_fixed_payments = monthly_transactions|selectattr("account_id", "equalto", account.id)|selectattr("fixed_expense_id", "ne", none)|list %}
+                {% if account_fixed_payments %}
+                <div class="mt-3 pt-3 border-top">
+                    <small class="text-muted d-block mb-2">Fixed Expenses Tracked This Month (for analysis only):</small>
+                    <div class="row">
+                        {% for payment in account_fixed_payments %}
+                        <div class="col-6 mb-1">
+                            <small class="text-info">
+                                <i class="fas fa-check-circle"></i> 
+                                {{ payment.fixed_expense.name }}: €{{ "%.2f"|format(payment.amount) }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Transactions This Month -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list"></i> Transactions This Month
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if monthly_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Account</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in monthly_transactions|sort(attribute="created_date", reverse=true) %}
+                            <tr>
+                                <td>{{ transaction.created_date.strftime('%m/%d') }}</td>
+                                <td>{{ transaction.account.name }}</td>
+                                <td>
+                                    {% if transaction.transaction_type == 'income' %}
+                                        <span class="badge bg-success">Income</span>
+                                    {% elif transaction.transaction_type == 'expense' %}
+                                        <span class="badge bg-danger">Expense</span>
+                                    {% elif transaction.transaction_type == 'misc_income' %}
+                                        <span class="badge bg-info">Misc Income</span>
+                                    {% elif transaction.transaction_type == 'misc_expense' %}
+                                        <span class="badge bg-warning">Misc Expense</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ transaction.description }}
+                                    {% if transaction.source_account_id %}
+                                        <br><small class="text-info">
+                                            <i class="fas fa-arrow-left"></i> From: {{ transaction.source_account.name }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ transaction.category or '-' }}</td>
+                                <td class="text-end">
+                                    {% if transaction.transaction_type in ['income', 'misc_income'] %}
+                                        <span class="text-success">+€{{ "%.2f"|format(transaction.amount) }}</span>
+                                    {% else %}
+                                        <span class="text-danger">-€{{ "%.2f"|format(transaction.amount) }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No transactions yet</h5>
+                    <p class="text-muted">Start by adding income or expenses for this month</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fixed Expenses -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-receipt"></i> Fixed Expenses This Month
+                </h5>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> For tracking only - doesn't affect balance calculations
+                </small>
+            </div>
+            <div class="card-body">
+                {% if paid_fixed_expenses %}
+                
+                <!-- Bulk Allocation Form -->
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb"></i> <strong>Bulk Allocation:</strong> Assign multiple fixed expenses to accounts at once for easier tracking.
+                </div>
+                
+                <form action="{{ url_for('bulk_allocate_fixed_expenses') }}" method="POST" id="bulkAllocationForm">
+                    <input type="hidden" name="month" value="{{ selected_month }}">
+                    <input type="hidden" name="year" value="{{ selected_year }}">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fixed Expense</th>
+                                    <th>Amount</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Assign to Account</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in paid_fixed_expenses %}
+                                {% set expense = item.expense %}
+                                {% set payment = item.payment %}
+                                
+                                <tr class="{% if payment %}table-success{% endif %}">
+                                    <td>
+                                        <strong>{{ expense.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="text-danger">€{{ "%.2f"|format(expense.amount) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ expense.category or 'Other' }}</span>
+                                    </td>
+                                    <td>
+                                        {% if payment %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Tracked
+                                            </span>
+                                            <br><small class="text-muted">{{ payment.account.name }}</small>
+                                        {% else %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not payment %}
+                                            <select name="expense_{{ expense.id }}" class="form-select form-select-sm">
+                                                <option value="">Select account...</option>
+                                                {% for account in accounts %}
+                                                <option value="{{ account.id }}">{{ account.name }} ({{ account.account_type|title }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        {% else %}
+                                            <small class="text-muted">Already tracked</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllFromAccount()">
+                                <i class="fas fa-magic"></i> Auto-assign from Primary
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllSelections()">
+                                <i class="fas fa-eraser"></i> Clear All
+                            </button>
+                        </div>
+                        <div>
+                            <span class="text-muted me-3">
+                                Total: €{{ paid_fixed_expenses|sum(attribute='expense.amount')|round(2) }}
+                            </span>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check-double"></i> Bulk Allocate Selected
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <script>
+                function selectAllFromAccount() {
+                    // Auto-assign all untracked expenses to the first available account (usually primary checking)
+                    const selects = document.querySelectorAll('select[name^="expense_"]');
+                    const firstAccountOption = document.querySelector('select[name^="expense_"] option[value]:not([value=""])');
+                    
+                    if (firstAccountOption) {
+                        const accountValue = firstAccountOption.value;
+                        selects.forEach(select => {
+                            if (select.value === '') {
+                                select.value = accountValue;
+                                select.parentElement.parentElement.classList.add('table-warning');
+                            }
+                        });
+                    }
+                }
+                
+                function clearAllSelections() {
+                    const selects = document.querySelectorAll('select[name^="expense_"]');
+                    selects.forEach(select => {
+                        select.value = '';
+                        select.parentElement.parentElement.classList.remove('table-warning');
+                    });
+                }
+                
+                // Highlight rows when account is selected
+                document.addEventListener('DOMContentLoaded', function() {
+                    const selects = document.querySelectorAll('select[name^="expense_"]');
+                    selects.forEach(select => {
+                        select.addEventListener('change', function() {
+                            const row = this.parentElement.parentElement;
+                            if (this.value) {
+                                row.classList.add('table-warning');
+                            } else {
+                                row.classList.remove('table-warning');
+                            }
+                        });
+                    });
+                });
+                </script>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No fixed expenses</h5>
+                    <p class="text-muted">
+                        <a href="{{ url_for('fixed_expenses') }}">Add fixed expenses</a> to track recurring monthly costs
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-university fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">No Bank Accounts Found</h4>
+                <p class="text-muted">You need to add bank accounts before you can enter monthly data.</p>
+                <a href="{{ url_for('add_account') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> Add Your First Account
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Note: Income/Expense entry is now handled directly in account cards above -->
+
+{% endblock %} 

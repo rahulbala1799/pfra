@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Personal Finance Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
+            <h1 class="display-4">Personal Finance Manager</h1>
+            <p class="lead">Track your monthly finances, manage bank accounts, and monitor your financial health with powerful analytics.</p>
+            <hr class="my-4">
+            <p>Start by adding your bank accounts and entering monthly balances to get comprehensive financial insights.</p>
+            <a class="btn btn-light btn-lg" href="{{ url_for('add_account') }}" role="button">
+                <i class="fas fa-university"></i> Add Bank Account
+            </a>
+            <a class="btn btn-outline-light btn-lg ms-2" href="{{ url_for('monthly_data') }}" role="button">
+                <i class="fas fa-calendar-alt"></i> Enter Monthly Data
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-value">{{ total_accounts }}</div>
+                <div class="metric-label">Active Accounts</div>
+                <i class="fas fa-university fa-2x mt-2"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="card-body text-center">
+                <div class="metric-value">€{{ "%.2f"|format(total_current_balance) }}</div>
+                <div class="metric-label">Current Balance</div>
+                <i class="fas fa-wallet fa-2x mt-2"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card metric-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="card-body text-center">
+                <div class="metric-value">€{{ "%.2f"|format(total_income) }}</div>
+                <div class="metric-label">This Month Income</div>
+                <i class="fas fa-arrow-up fa-2x mt-2"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card-body text-center">
+                <div class="metric-value">€{{ "%.2f"|format(total_actual_expenses) }}</div>
+                <div class="metric-label">Actual Expenses</div>
+                <small class="d-block" style="opacity: 0.8;">
+                    Total: €{{ "%.2f"|format(total_calculated_expenses) }} - Investments: €{{ "%.2f"|format(total_investments) }}
+                </small>
+                <i class="fas fa-arrow-down fa-2x mt-2"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-university fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Manage Accounts</h5>
+                <p class="card-text">Add and manage your bank accounts including savings, checking, credit cards, and investments.</p>
+                <a href="{{ url_for('accounts') }}" class="btn btn-primary">
+                    <i class="fas fa-cog"></i> Manage Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-calendar-alt fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Monthly Data</h5>
+                <p class="card-text">Enter opening balances, income, and expenses for each month to track your financial progress.</p>
+                <a href="{{ url_for('monthly_data') }}" class="btn btn-success">
+                    <i class="fas fa-edit"></i> Enter Data
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Analytics Dashboard</h5>
+                <p class="card-text">Visualize your financial trends, net worth growth, and spending patterns with interactive charts.</p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-info">
+                    <i class="fas fa-chart-bar"></i> View Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-receipt fa-3x text-danger mb-3"></i>
+                <h5 class="card-title">Fixed Expenses</h5>
+                <p class="card-text">Manage your recurring monthly expenses like rent, subscriptions, and utilities.</p>
+                <a href="{{ url_for('fixed_expenses') }}" class="btn btn-danger">
+                    <i class="fas fa-receipt"></i> Manage Expenses
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-credit-card fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Debt Management</h5>
+                <p class="card-text">Track your credit cards, loans, monthly payments, and debt-to-income ratio in one place.</p>
+                <a href="{{ url_for('debt') }}" class="btn btn-warning">
+                    <i class="fas fa-credit-card"></i> Manage Debt
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Investments</h5>
+                <p class="card-text">Track your monthly investments in Index Funds, Metals, and Crypto with automatic expense adjustments.</p>
+                <a href="{{ url_for('investments') }}" class="btn btn-success">
+                    <i class="fas fa-chart-line"></i> Track Investments
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-bar fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Stock Analysis</h5>
+                <p class="card-text">Monitor stock prices and analyze market trends for your investment portfolio.</p>
+                <a href="{{ url_for('stocks') }}" class="btn btn-warning">
+                    <i class="fas fa-search-dollar"></i> Analyze Stocks
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 text-center border-info">
+            <div class="card-body">
+                <i class="fas fa-euro-sign fa-3x text-success mb-3"></i>
+                <h5 class="card-title text-success">EUR Currency</h5>
+                <p class="card-text">All financial data is tracked in Euros (€). Perfect for European users and businesses.</p>
+                <div class="badge bg-success">Default Currency: EUR</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-star"></i> Key Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>Bank Account Management:</strong> Track multiple accounts</li>
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>Monthly Tracking:</strong> Opening/closing balances</li>
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>Income & Expense Tracking:</strong> Monthly summaries</li>
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>Interactive Charts:</strong> Visual analytics</li>
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>Net Worth Tracking:</strong> Historical trends</li>
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>Fixed Expenses:</strong> Recurring expense management</li>
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>Investment Tracking:</strong> Index, Metals, Crypto with expense adjustment</li>
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>Stock Market Analysis:</strong> Real-time stock data</li>
+                    <li class="mb-2"><i class="fas fa-check text-success"></i> <strong>SQLite Database:</strong> Secure data storage</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-rocket"></i> Getting Started
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>New User?</strong> Follow these steps:
+                    </div>
+                    <ol class="list-group list-group-numbered">
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Add Bank Accounts</div>
+                                Set up your savings, checking, credit accounts
+                            </div>
+                            <a href="{{ url_for('add_account') }}" class="btn btn-sm btn-outline-primary">Add</a>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Enter Monthly Data</div>
+                                Input balances and transactions
+                            </div>
+                            <a href="{{ url_for('monthly_data') }}" class="btn btn-sm btn-outline-success">Enter</a>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">View Analytics</div>
+                                Explore your financial dashboard
+                            </div>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-info">View</a>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if total_accounts == 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+            <h4>Welcome to Your Personal Finance Manager!</h4>
+            <p class="mb-3">You haven't added any bank accounts yet. Start by adding your first account to begin tracking your finances.</p>
+            <a href="{{ url_for('add_account') }}" class="btn btn-warning btn-lg">
+                <i class="fas fa-plus"></i> Add Your First Account
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %} 

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Fixed Expense - Personal Finance{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-edit"></i> Edit Fixed Expense</h2>
+        <p class="text-muted">Update details for: <strong>{{ expense.name }}</strong></p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-receipt"></i> Fixed Expense Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Expense Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required
+                                   value="{{ expense.name }}"
+                                   placeholder="e.g., Netflix Subscription, Rent, Internet">
+                            <div class="form-text">Enter a descriptive name for this expense</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">Select a category</option>
+                                <option value="Housing" {{ 'selected' if expense.category == 'Housing' }}>Housing</option>
+                                <option value="Utilities" {{ 'selected' if expense.category == 'Utilities' }}>Utilities</option>
+                                <option value="Subscriptions" {{ 'selected' if expense.category == 'Subscriptions' }}>Subscriptions</option>
+                                <option value="Insurance" {{ 'selected' if expense.category == 'Insurance' }}>Insurance</option>
+                                <option value="Transportation" {{ 'selected' if expense.category == 'Transportation' }}>Transportation</option>
+                                <option value="Healthcare" {{ 'selected' if expense.category == 'Healthcare' }}>Healthcare</option>
+                                <option value="Education" {{ 'selected' if expense.category == 'Education' }}>Education</option>
+                                <option value="Entertainment" {{ 'selected' if expense.category == 'Entertainment' }}>Entertainment</option>
+                                <option value="Food" {{ 'selected' if expense.category == 'Food' }}>Food</option>
+                                <option value="Other" {{ 'selected' if expense.category == 'Other' }}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Optional: Add any additional details about this expense">{{ expense.description or '' }}</textarea>
+                    </div>
+                    
+                    <!-- Financial Details -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">Amount (€) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" min="0" class="form-control" id="amount" name="amount" required
+                                       value="{{ expense.amount }}"
+                                       placeholder="0.00">
+                            </div>
+                            <div class="form-text">Enter the exact amount for each payment</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="frequency" class="form-label">Frequency <span class="text-danger">*</span></label>
+                            <select class="form-select" id="frequency" name="frequency" required>
+                                <option value="">Select frequency</option>
+                                <option value="monthly" {{ 'selected' if expense.frequency == 'monthly' }}>Monthly</option>
+                                <option value="quarterly" {{ 'selected' if expense.frequency == 'quarterly' }}>Quarterly (Every 3 months)</option>
+                                <option value="yearly" {{ 'selected' if expense.frequency == 'yearly' }}>Yearly</option>
+                            </select>
+                            <div class="form-text">How often this expense occurs</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Date Range -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required
+                                   value="{{ expense.start_date.strftime('%Y-%m-%d') }}">
+                            <div class="form-text">When this expense started or will start</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="end_date" class="form-label">End Date (Optional)</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date"
+                                   value="{{ expense.end_date.strftime('%Y-%m-%d') if expense.end_date else '' }}">
+                            <div class="form-text">Leave empty for ongoing expenses</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                       {{ 'checked' if expense.is_active }}>
+                                <label class="form-check-label" for="is_active">
+                                    <strong>Active Expense</strong>
+                                </label>
+                                <div class="form-text">Uncheck to deactivate this expense without deleting it</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> Created: {{ expense.created_date.strftime('%Y-%m-%d %H:%M') }}<br>
+                                <i class="fas fa-edit"></i> Last updated: {{ expense.updated_date.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Monthly Impact Preview -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-calculator"></i> Monthly Impact Preview</h6>
+                                    <div id="monthly-impact" class="h5 text-primary">
+                                        €0.00 per month
+                                    </div>
+                                    <small class="text-muted">This is how much this expense affects your monthly budget</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('fixed_expenses') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Fixed Expense
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History and Impact Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history"></i> Expense History & Impact
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Current Status</h6>
+                        <p>
+                            {% if expense.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-warning">Inactive</span>
+                            {% endif %}
+                        </p>
+                        <h6>Monthly Impact</h6>
+                        <p class="h5 text-primary">
+                            {% if expense.frequency == 'monthly' %}
+                                €{{ "%.2f"|format(expense.amount) }}
+                            {% elif expense.frequency == 'yearly' %}
+                                €{{ "%.2f"|format(expense.amount / 12) }}
+                            {% elif expense.frequency == 'quarterly' %}
+                                €{{ "%.2f"|format(expense.amount / 3) }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Duration</h6>
+                        <p>
+                            <strong>Started:</strong> {{ expense.start_date.strftime('%B %d, %Y') }}<br>
+                            <strong>Ends:</strong> {{ expense.end_date.strftime('%B %d, %Y') if expense.end_date else 'Ongoing' }}
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Category</h6>
+                        <p>
+                            <span class="badge bg-secondary">{{ expense.category or 'Uncategorized' }}</span>
+                        </p>
+                        <h6>Frequency</h6>
+                        <p>
+                            <span class="badge bg-info">{{ expense.frequency|title }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.getElementById('amount');
+    const frequencySelect = document.getElementById('frequency');
+    const monthlyImpactDiv = document.getElementById('monthly-impact');
+    
+    function updateMonthlyImpact() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const frequency = frequencySelect.value;
+        
+        let monthlyAmount = 0;
+        
+        switch(frequency) {
+            case 'monthly':
+                monthlyAmount = amount;
+                break;
+            case 'quarterly':
+                monthlyAmount = amount / 3;
+                break;
+            case 'yearly':
+                monthlyAmount = amount / 12;
+                break;
+            default:
+                monthlyAmount = 0;
+        }
+        
+        monthlyImpactDiv.textContent = `€${monthlyAmount.toFixed(2)} per month`;
+        
+        if (monthlyAmount > 0) {
+            monthlyImpactDiv.className = 'h5 text-success';
+        } else {
+            monthlyImpactDiv.className = 'h5 text-muted';
+        }
+    }
+    
+    amountInput.addEventListener('input', updateMonthlyImpact);
+    frequencySelect.addEventListener('change', updateMonthlyImpact);
+    
+    // Initialize the preview
+    updateMonthlyImpact();
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Fixed Expenses - Personal Finance{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-receipt"></i> Fixed Expenses Management</h2>
+            <a href="{{ url_for('add_fixed_expense') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Fixed Expense
+            </a>
+        </div>
+        <p class="text-muted">Manage your recurring monthly expenses</p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h5>Monthly Expenses</h5>
+                <h3>€{{ "%.2f"|format(total_monthly) }}</h3>
+                <small>Recurring monthly</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h5>Yearly Expenses</h5>
+                <h3>€{{ "%.2f"|format(total_yearly) }}</h3>
+                <small>Annual recurring</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h5>Quarterly Expenses</h5>
+                <h3>€{{ "%.2f"|format(total_quarterly) }}</h3>
+                <small>Every 3 months</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h5>Monthly Equivalent</h5>
+                <h3>€{{ "%.2f"|format(monthly_equivalent) }}</h3>
+                <small>Total per month</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Fixed Expenses -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-check-circle text-success"></i> Active Fixed Expenses
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_expenses %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Frequency</th>
+                                <th>Category</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Monthly Impact</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in active_expenses %}
+                            <tr>
+                                <td>
+                                    <strong>{{ expense.name }}</strong>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ expense.description or '-' }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">€{{ "%.2f"|format(expense.amount) }}</span>
+                                </td>
+                                <td>
+                                    {% if expense.frequency == 'monthly' %}
+                                        <span class="badge bg-primary">Monthly</span>
+                                    {% elif expense.frequency == 'yearly' %}
+                                        <span class="badge bg-success">Yearly</span>
+                                    {% elif expense.frequency == 'quarterly' %}
+                                        <span class="badge bg-info">Quarterly</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ expense.category or 'Uncategorized' }}</span>
+                                </td>
+                                <td>{{ expense.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ expense.end_date.strftime('%Y-%m-%d') if expense.end_date else 'Ongoing' }}</td>
+                                <td>
+                                    {% if expense.frequency == 'monthly' %}
+                                        <strong>€{{ "%.2f"|format(expense.amount) }}</strong>
+                                    {% elif expense.frequency == 'yearly' %}
+                                        <strong>€{{ "%.2f"|format(expense.amount / 12) }}</strong>
+                                    {% elif expense.frequency == 'quarterly' %}
+                                        <strong>€{{ "%.2f"|format(expense.amount / 3) }}</strong>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('edit_fixed_expense', expense_id=expense.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ url_for('toggle_fixed_expense', expense_id=expense.id) }}" 
+                                           class="btn btn-outline-warning btn-sm"
+                                           onclick="return confirm('Are you sure you want to deactivate this expense?')">
+                                            <i class="fas fa-pause"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-receipt fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No Fixed Expenses</h4>
+                    <p class="text-muted">You haven't added any fixed expenses yet.</p>
+                    <a href="{{ url_for('add_fixed_expense') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus"></i> Add Your First Fixed Expense
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inactive Fixed Expenses -->
+{% if inactive_expenses %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-pause-circle text-warning"></i> Inactive Fixed Expenses
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Amount</th>
+                                <th>Frequency</th>
+                                <th>Category</th>
+                                <th>Period</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in inactive_expenses %}
+                            <tr class="text-muted">
+                                <td>{{ expense.name }}</td>
+                                <td>€{{ "%.2f"|format(expense.amount) }}</td>
+                                <td>{{ expense.frequency|title }}</td>
+                                <td>{{ expense.category or 'Uncategorized' }}</td>
+                                <td>
+                                    {{ expense.start_date.strftime('%Y-%m-%d') }} - 
+                                    {{ expense.end_date.strftime('%Y-%m-%d') if expense.end_date else 'Ongoing' }}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('edit_fixed_expense', expense_id=expense.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ url_for('toggle_fixed_expense', expense_id=expense.id) }}" 
+                                           class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-play"></i> Reactivate
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tips and Info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-lightbulb"></i> Tips for Managing Fixed Expenses
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chart-pie"></i> Categories</h6>
+                        <ul class="list-unstyled">
+                            <li>• Housing (Rent, Mortgage, Insurance)</li>
+                            <li>• Utilities (Electric, Gas, Water, Internet)</li>
+                            <li>• Subscriptions (Netflix, Spotify, Gym)</li>
+                            <li>• Insurance (Health, Auto, Life)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-calendar"></i> Frequency Types</h6>
+                        <ul class="list-unstyled">
+                            <li>• <strong>Monthly:</strong> Regular monthly payments</li>
+                            <li>• <strong>Quarterly:</strong> Every 3 months</li>
+                            <li>• <strong>Yearly:</strong> Annual payments</li>  
+                            <li>• Use end dates for temporary expenses</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %} 

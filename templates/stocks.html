@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Stocks - Personal Finance App{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-bar"></i> Stock Market Analysis</h2>
+        <p class="text-muted">Monitor stock prices and analyze market trends for your investments</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-search"></i> Stock Lookup
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" id="stockSymbol" 
+                               placeholder="Enter stock symbol (e.g., AAPL, GOOGL, TSLA)" 
+                               value="AAPL">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100" onclick="loadStockData()">
+                            <i class="fas fa-chart-line"></i> Analyze Stock
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="stockResults" style="display: none;">
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h5>Current Price</h5>
+                    <h3 id="currentPrice">€0.00</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white" id="changeCard">
+                <div class="card-body text-center">
+                    <h5>Price Change</h5>
+                    <h3 id="priceChange">€0.00</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white" id="percentCard">
+                <div class="card-body text-center">
+                    <h5>Percent Change</h5>
+                    <h3 id="percentChange">0.00%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-area"></i> Stock Price Chart - Last 1 Year
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="stockChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-star"></i> Popular Stocks
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="quickLookup('AAPL')">
+                            AAPL - Apple
+                        </button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="quickLookup('GOOGL')">
+                            GOOGL - Google
+                        </button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="quickLookup('MSFT')">
+                            MSFT - Microsoft
+                        </button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="quickLookup('TSLA')">
+                            TSLA - Tesla
+                        </button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="quickLookup('AMZN')">
+                            AMZN - Amazon
+                        </button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="quickLookup('NVDA')">
+                            NVDA - NVIDIA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Investment Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i> 
+                        <strong>Diversify:</strong> Don't put all money in one stock
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i> 
+                        <strong>Research:</strong> Understand the company before investing
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i> 
+                        <strong>Long-term:</strong> Think long-term for better returns
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i> 
+                        <strong>Risk Management:</strong> Only invest what you can afford to lose
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadStockData() {
+    const symbol = document.getElementById('stockSymbol').value.toUpperCase();
+    if (!symbol) {
+        alert('Please enter a stock symbol');
+        return;
+    }
+
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    button.disabled = true;
+
+    fetch(`/api/stock_data/${symbol}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+
+            // Update metrics
+                            document.getElementById('currentPrice').textContent = '€' + data.current_price;
+            document.getElementById('priceChange').textContent = 
+                (data.price_change >= 0 ? '+€' : '-€') + Math.abs(data.price_change);
+            document.getElementById('percentChange').textContent = 
+                (data.percent_change >= 0 ? '+' : '') + data.percent_change + '%';
+
+            // Update card colors based on performance
+            const changeCard = document.getElementById('changeCard');
+            const percentCard = document.getElementById('percentCard');
+            
+            if (data.price_change >= 0) {
+                changeCard.className = 'card text-white bg-success';
+                percentCard.className = 'card text-white bg-success';
+            } else {
+                changeCard.className = 'card text-white bg-danger';
+                percentCard.className = 'card text-white bg-danger';
+            }
+
+            // Plot the chart
+            const chartData = JSON.parse(data.chart);
+            Plotly.newPlot('stockChart', chartData.data, chartData.layout, {responsive: true});
+
+            // Show results
+            document.getElementById('stockResults').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error fetching stock data');
+        })
+        .finally(() => {
+            // Restore button
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+
+function quickLookup(symbol) {
+    document.getElementById('stockSymbol').value = symbol;
+    loadStockData();
+}
+
+// Allow Enter key to trigger search
+document.getElementById('stockSymbol').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        loadStockData();
+    }
+});
+
+// Load AAPL by default
+document.addEventListener('DOMContentLoaded', function() {
+    loadStockData();
+});
+</script>
+{% endblock %} 
